@@ -1,4 +1,4 @@
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
 
 #include "constants.h"
 #include "config.h"
@@ -16,8 +16,8 @@ void setupWifi()
   Serial.print(WIFI_SSID);
   Serial.print("\"...");
 
+  WiFi.hostname(mqtt.getClientId());
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  WiFi.setHostname(mqtt.getClientId().c_str());
 
   uint retries = 0;
   while (WiFi.status() != WL_CONNECTED)

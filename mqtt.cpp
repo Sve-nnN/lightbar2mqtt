@@ -1,5 +1,4 @@
 #include <Arduino_JSON.h>
-#include <esp_mac.h>
 
 #include "mqtt.h"
 
@@ -17,15 +16,7 @@ MQTT::MQTT(WiFiClient *wifiClient, const char *mqttServer, int mqttPort, const c
 
     this->client = new PubSubClient(*wifiClient);
 
-    String mac = "";
-    unsigned char mac_base[6] = {0};
-    if (esp_efuse_mac_get_default(mac_base) == ESP_OK)
-    {
-        char buffer[13]; // 6*2 characters for hex + 5 characters for colons + 1 character for null terminator
-        sprintf(buffer, "%02X%02X%02X%02X%02X%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
-        mac = buffer;
-    }
-    this->clientId = "l2m_" + mac;
+    this->clientId = "l2m_" + WiFi.macAddress();
     this->combinedRootTopic = this->mqttRootTopic + "/" + this->clientId;
 }
 
@@ -49,13 +40,13 @@ void MQTT::onMessage(char *topic, byte *payload, unsigned int length)
     Serial.print("[MQTT] New Message (");
     Serial.print(topic);
     Serial.print("): ");
-    for (int i = 0; i < length; i++)
-    {
-        Serial.print((char)payload[i]);
-    }
-    Serial.println();
+    char *payload_s = (char *)malloc(length + 1);
+    memcpy(payload_s, payload, length);
+    payload_s[length] = '\0';
+    Serial.println(payload_s);
 
-    JSONVar command = JSON.parse(String(payload, length));
+    JSONVar command = JSON.parse(payload_s);
+    free(payload_s);
 
     Lightbar *lightbar = nullptr;
     for (int i = 0; i < this->lightbarCount; i++)
@@ -198,10 +189,12 @@ void MQTT::sendAllHomeAssistantDiscoveryMessages()
     for (int i = 0; i < this->lightbarCount; i++)
     {
         this->sendHomeAssistantLightbarDiscoveryMessages(this->lightbars[i]);
+        yield();
     }
     for (int i = 0; i < this->remoteCount; i++)
     {
         this->sendHomeAssistantRemoteDiscoveryMessages(this->remotes[i]);
+        yield();
     }
 }
 
@@ -260,11 +253,10 @@ void MQTT::sendHomeAssistantLightbarDiscoveryMessages(Lightbar *lightbar)
                            R"json(_lightbar",
     "max_mireds": 370,
     "min_mireds":153,
-    "p": "light",
     "icon": "mdi:wall-sconce-flat"
     )json" + "}";
 
-    this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/light/" + topicClient + "/lightbar/config").c_str(), rendevous_str.length(), true);
+    this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/light/" + topicClient + "/config").c_str(), rendevous_str.length(), true);
     this->client->print(rendevous_str);
     this->client->endPublish();
 
@@ -274,10 +266,9 @@ void MQTT::sendHomeAssistantLightbarDiscoveryMessages(Lightbar *lightbar)
     "name": "Pair",
     "cmd_t": "~/pair",
     "uniq_id": ")json" +
-                    topicClient + R"json(_pair",
-    "p": "button"
+                    topicClient + R"json(_pair"
     )json" + "}";
-    this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/button/" + topicClient + "/pair/config").c_str(), rendevous_str.length(), true);
+    this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/button/" + topicClient + "/config").c_str(), rendevous_str.length(), true);
     this->client->print(rendevous_str);
     this->client->endPublish();
 }
@@ -358,11 +349,11 @@ void MQTT::sendHomeAssistantRemoteDiscoveryMessages(Remote *remote)
                         R"json(",
     "type": "action",
     "topic": "~/state",
-    "p": "device_automation"
+    "topic": "~/state"
     )json" + "}";
 
-        this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/device_automation/" + topicClient + "/action_" + cmd + "/config").c_str(), rendevous_str.length(), true);
-        this->client->print(rendevous_str);
+        this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/device_automation/" + topicClient + "/" + cmd + "/config").c_str(), rendevous_str.length(), true);
+        this.client->print(rendevous_str);
         this->client->endPublish();
     }
 }
