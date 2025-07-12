@@ -51,20 +51,3 @@ bool Remote::registerCommandListener(std::function<void(Remote *, byte, byte)> c
     this->numCommandListeners++;
     return true;
 }
-
-bool Remote::unregisterCommandListener(std::function<void(Remote *, byte, byte)> callback)
-{
-    for (int i = 0; i < this->numCommandListeners; i++)
-    {
-        if (this->commandListeners[i].target<void(Remote *, byte, byte)>() == callback.target<void(Remote *, byte, byte)>())
-        {
-            for (int j = i; j < this->numCommandListeners - 1; j++)
-            {
-                this->commandListeners[j] = this->commandListeners[j + 1];
-            }
-            this->numCommandListeners--;
-            return true;
-        }
-    }
-    return false;
-}

@@ -353,7 +353,7 @@ void MQTT::sendHomeAssistantRemoteDiscoveryMessages(Remote *remote)
     )json" + "}";
 
         this->client->beginPublish(String(homeAssistantDiscoveryPrefix + "/device_automation/" + topicClient + "/" + cmd + "/config").c_str(), rendevous_str.length(), true);
-        this.client->print(rendevous_str);
+        this->client->print(rendevous_str);
         this->client->endPublish();
     }
 }
