@@ -8,6 +8,7 @@
 
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_Encoder.h>
 #include "lightbar.h"
 #include "settings.h"
 
@@ -71,6 +72,7 @@ private:
 
     // Hardware
     Adafruit_SSD1306 display; /**< The display object. */
+    Adafruit_Encoder encoder; /**< The encoder object. */
     Lightbar *lightbar;      /**< A pointer to the Lightbar object. */
     Settings *settings;      /**< A pointer to the Settings object. */
 

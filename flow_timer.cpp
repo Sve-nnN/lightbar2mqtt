@@ -1,23 +1,15 @@
-/**
- * @file flow_timer.cpp
- * @brief Implements the FlowTimer class.
- */
-
 #include "flow_timer.h"
 #include "constants.h"
 
-FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1)
+FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1),
+                                                              encoder(PIN_DT, PIN_CLK)
 {
-    if (lightbar != nullptr)
-    {
-        this->lightbar = lightbar;
-    }
+    this->lightbar = lightbar;
     this->settings = settings;
 }
 
 void FlowTimer::setup()
 {
-    Serial.println("--- FlowTimer Setup ---");
     initHardware();
     initDisplay();
     updateDisplay();
@@ -27,7 +19,6 @@ void FlowTimer::setup()
 void FlowTimer::loop()
 {
     unsigned long currentMillis = millis();
-
     handleRotaryInput();
     handleButtonPresses(currentMillis);
     handleCounting(currentMillis);
@@ -36,16 +27,12 @@ void FlowTimer::loop()
 
 void FlowTimer::initHardware()
 {
-    Serial.println("Initializing hardware...");
-    pinMode(PIN_CLK, INPUT);
-    pinMode(PIN_DT, INPUT);
-    pinMode(PIN_SW, INPUT);
-    Serial.println("Hardware initialized.");
+    pinMode(PIN_SW, INPUT_PULLUP);
+    encoder.begin();
 }
 
 void FlowTimer::initDisplay()
 {
-    Wire.begin(PIN_SDA, PIN_SCL);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
     {
         Serial.println(F("SSD1306 allocation failed"));
@@ -58,68 +45,58 @@ void FlowTimer::initDisplay()
 
 void FlowTimer::updateDisplay()
 {
-    Serial.println("Updating display...");
     display.setTextColor(WHITE);
     display.clearDisplay();
 
-    // Display top row
     String topRowText;
 
     if (currentState == COUNTING_UP)
     {
-        topRowText = "Focus! \x18"; // Focus with upward triangle for counting UP
+        topRowText = "Focus! \\x18";
     }
     else if (currentState == COUNTING_DOWN)
     {
-        topRowText = "Focus! \x19"; // Focus with downward triangle for counting DOWN
+        topRowText = "Focus! \\x19";
     }
     else
     {
-        topRowText = "Flow: " + String(flowMinutes); // Display total flow minutes when not counting
+        topRowText = "Flow: " + String(flowMinutes);
     }
 
-    Serial.print("Top row text: ");
-    Serial.println(topRowText);
+    int topRowTextWidth = topRowText.length() * 12;
+    int topRowX = (128 - topRowTextWidth) / 2;
 
-    int topRowTextWidth = topRowText.length() * 12; // TextSize 2, so 12 pixels per char
-    int topRowX = (128 - topRowTextWidth) / 2;      // Center the text on the top row
-
-    display.setTextSize(2);      // Larger size for top row
-    display.setCursor(topRowX, 0); // Centered on top row
+    display.setTextSize(2);
+    display.setCursor(topRowX, 0);
     display.print(topRowText);
 
-    // Display main row (menu or counting values)
     String mainRowText;
 
     if (currentState == MENU)
     {
-        mainRowText = menuOptions[menuIndex]; // Display UP, DOWN, or Reset in the menu
+        mainRowText = menuOptions[menuIndex];
     }
     else if (currentState == COUNTING_UP)
     {
-        mainRowText = String(elapsedMinutes); // Display counting up minutes
+        mainRowText = String(elapsedMinutes);
     }
     else if (currentState == COUNTING_DOWN || currentState == SELECTING_DOWN_DURATION)
     {
-        mainRowText = String(countdownValue); // Display countdown minutes
+        mainRowText = String(countdownValue);
     }
     else if (currentState == IDLE)
     {
         mainRowText = "IDLE?";
     }
 
-    Serial.print("Main row text: ");
-    Serial.println(mainRowText);
+    int mainRowTextWidth = mainRowText.length() * 24;
+    int mainRowX = (128 - mainRowTextWidth) / 2;
 
-    int mainRowTextWidth = mainRowText.length() * 24; // TextSize 4, so 24 pixels per char
-    int mainRowX = (128 - mainRowTextWidth) / 2;      // Calculate centered X position
-
-    display.setTextSize(4);       // Larger size for main row
-    display.setCursor(mainRowX, 30); // Centered on main row
+    display.setTextSize(4);
+    display.setCursor(mainRowX, 30);
     display.print(mainRowText);
 
-    display.display(); // Show the updated display
-    Serial.println("Display updated.");
+    display.display();
 }
 
 bool FlowTimer::buttonPressed()
@@ -138,24 +115,19 @@ void FlowTimer::handleButtonPresses(unsigned long currentMillis)
     if (!buttonPressed())
         return;
 
-    Serial.print("Button pressed. Current state: ");
-    Serial.println(currentState);
-
     switch (currentState)
     {
     case MENU:
-        Serial.print("Menu index: ");
-        Serial.println(menuIndex);
         if (menuIndex == 0)
-        { // UP selected
+        {
             startCountingUp();
         }
         else if (menuIndex == 1)
-        { // DOWN selected
+        {
             startSelectingDownDuration();
         }
         else if (menuIndex == 2)
-        { // Reset selected
+        {
             resetFlowMinutes();
         }
         break;
@@ -290,21 +262,7 @@ void FlowTimer::successAnimation()
 
 int FlowTimer::getRotation()
 {
-    static int previousCLK = digitalRead(PIN_CLK);
-    int currentCLK = digitalRead(PIN_CLK);
-
-    if (currentCLK == LOW && previousCLK == HIGH && (millis() - lastRotaryTime > rotaryDebounceDelay))
-    {
-        lastRotaryTime = millis();
-        int DTValue = digitalRead(PIN_DT);
-
-        previousCLK = currentCLK;
-
-        return (DTValue != currentCLK) ? 1 : -1;
-    }
-
-    previousCLK = currentCLK;
-    return 0;
+    return encoder.read();
 }
 
 void FlowTimer::handleRotaryInput()
@@ -314,22 +272,43 @@ void FlowTimer::handleRotaryInput()
         return;
 
     lastActivityTime = millis();
-    Serial.print("Rotary input detected. Rotation: ");
+    Serial.print(millis());
+    Serial.print(" - Rotation detected, activity timer reset. Rotation: ");
     Serial.println(rotation);
 
     if (currentState == MENU)
     {
-        menuIndex = (menuIndex + rotation + 3) % 3;
-        Serial.print("New menu index: ");
-        Serial.println(menuIndex);
+        if (rotation > 0)
+        {
+            menuIndex = (menuIndex + 1) % 3;
+        }
+        else
+        {
+            menuIndex = (menuIndex - 1 + 3) % 3;
+        }
         updateDisplay();
+        Serial.print(millis());
+        Serial.print(" - Menu option: ");
+        Serial.println(menuOptions[menuIndex]);
     }
     else if (currentState == SELECTING_DOWN_DURATION)
     {
-        countdownValue = max(1, countdownValue + rotation);
-        Serial.print("New countdown value: ");
-        Serial.println(countdownValue);
+        if (rotation > 0)
+        {
+            countdownValue++;
+        }
+        else
+        {
+            countdownValue--;
+            if (countdownValue < 1)
+            {
+                countdownValue = 1;
+            }
+        }
         updateDisplay();
+        Serial.print(millis());
+        Serial.print(" - Countdown value: ");
+        Serial.println(countdownValue);
     }
 }
 
@@ -347,7 +326,8 @@ void FlowTimer::handleInactivity(unsigned long currentMillis)
                 currentState = IDLE;
                 idleStartTime = millis();
                 updateDisplay();
-                Serial.println("IDLE state entered due to inactivity.");
+                Serial.print(millis());
+                Serial.println(" - IDLE state entered due to inactivity.");
             }
         }
     }
@@ -356,7 +336,8 @@ void FlowTimer::handleInactivity(unsigned long currentMillis)
     {
         displayOff = true;
         display.ssd1306_command(SSD1306_DISPLAYOFF);
-        Serial.println("Display turned off after 30 minutes of IDLE.");
+        Serial.print(millis());
+        Serial.println(" - Display turned off after 30 minutes of IDLE.");
     }
 
     if (currentState == IDLE && (getRotation() != 0 || buttonPressed()))
@@ -368,10 +349,12 @@ void FlowTimer::handleInactivity(unsigned long currentMillis)
         {
             display.ssd1306_command(SSD1306_DISPLAYON);
             displayOff = false;
-            Serial.println("Display turned back on.");
+            Serial.print(millis());
+            Serial.println(" - Display turned back on.");
         }
 
         updateDisplay();
-        Serial.println("Exiting IDLE mode. Back to MENU.");
+        Serial.print(millis());
+        Serial.println(" - Exiting IDLE mode. Back to MENU.");
     }
 }

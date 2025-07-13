@@ -2,10 +2,10 @@
 
 /* -- nRF24 --------------------------------------------------------------------------------------------------- */
 // The pin number to which the nRF24's Chip Enable (CE) pin is connected.
-#define RADIO_PIN_CE 5
+#define RADIO_PIN_CE 4
 
 // The pin number to which the nRF24's Chip Select Null (CSN) pin is connected.
-#define RADIO_PIN_CSN 15
+#define RADIO_PIN_CSN 5
 
 /* -- Light Bars ---------------------------------------------------------------------------------------------- */
 // All light bars that should be controlled by this controller. Each light bar must have a unique serial.
