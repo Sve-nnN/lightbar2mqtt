@@ -24,9 +24,9 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
 | NRF24L01+ GND | GND |
 | NRF24L01+ CSN | D8 (GPIO15) |
 | NRF24L01+ CE | D1 (GPIO5) |
-| NRF24L01+ MOSI | D5 (GPIO14) |
+| NRF24L01+ MOSI | D7 (GPIO13) |
 | NRF24L01+ MISO | D6 (GPIO12) |
-| NRF24L01+ SCK | D7 (GPIO13) |
+| NRF24L01+ SCK | D5 (GPIO14) |
 | OLED VCC | 5V |
 | OLED GND | GND |
 | OLED SCL | D2 (GPIO4) |
@@ -47,9 +47,9 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
         |             GND |<---->| GND             |
         |             CSN |<---->| D8 (GPIO15)     |
         |              CE |<---->| D1 (GPIO5)      |
-        |            MOSI |<---->| D5 (GPIO14)     |
+        |            MOSI |<---->| D7 (GPIO13)     |
         |            MISO |<---->| D6 (GPIO12)     |
-        |             SCK |<---->| D7 (GPIO13)     |
+        |             SCK |<---->| D5 (GPIO14)     |
         +-----------------+      +-----------------+
         +-----------------+      |                 |
         |   OLED Display  |      |                 |

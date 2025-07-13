@@ -6,7 +6,7 @@
 #include "flow_timer.h"
 #include "constants.h"
 
-FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, PIN_SW)
+FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1)
 {
     this->lightbar = lightbar;
     this->settings = settings;
@@ -39,6 +39,7 @@ void FlowTimer::initHardware()
 
 void FlowTimer::initDisplay()
 {
+    Wire.begin(PIN_SDA, PIN_SCL);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
     {
         Serial.println(F("SSD1306 allocation failed"));

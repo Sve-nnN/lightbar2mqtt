@@ -5,17 +5,14 @@
 #include <Arduino.h>
 
 // Pin definitions
-#define RADIO_PIN_CE D1
-#define RADIO_PIN_CSN D8
-
 // Rotary Encoder
-#define PIN_CLK D2
-#define PIN_DT D3
-#define PIN_SW D4
+#define PIN_CLK D0
+#define PIN_DT D9
+#define PIN_SW D10
 
 // OLED Display
-#define PIN_SDA D7
-#define PIN_SCL D6
+#define PIN_SDA D3
+#define PIN_SCL D2
 
 namespace constants
 {
