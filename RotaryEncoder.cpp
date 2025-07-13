@@ -138,7 +138,7 @@ void RotaryEncoder::tick(void)
       break;
 
     case LatchMode::TWO03:
-      if ((thisState == LATCH0) || (thisSate == LATCH3)) {
+      if ((thisState == LATCH0) || (thisState == LATCH3)) {
         // The hardware has 2 steps with a latch on the input state 0 and 3
         _positionExt = _position >> 1;
         _positionExtTimePrev = _positionExtTime;

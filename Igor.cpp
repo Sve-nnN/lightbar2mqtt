@@ -1,5 +1,6 @@
 #include "Igor.h"
 #include "constants.h"
+#include <Wire.h>
 
 Igor::Igor() : display(128, 64, &Wire, -1),
                encoder(PIN_CLK, PIN_DT)
