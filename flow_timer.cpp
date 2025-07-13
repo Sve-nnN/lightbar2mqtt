@@ -14,6 +14,7 @@ FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, 
 
 void FlowTimer::setup()
 {
+    Serial.println("--- FlowTimer Setup ---");
     initHardware();
     initDisplay();
     updateDisplay();
@@ -32,9 +33,11 @@ void FlowTimer::loop()
 
 void FlowTimer::initHardware()
 {
+    Serial.println("Initializing hardware...");
     pinMode(PIN_CLK, INPUT);
     pinMode(PIN_DT, INPUT);
     pinMode(PIN_SW, INPUT);
+    Serial.println("Hardware initialized.");
 }
 
 void FlowTimer::initDisplay()
@@ -128,9 +131,14 @@ void FlowTimer::handleButtonPresses(unsigned long currentMillis)
     if (!buttonPressed())
         return;
 
+    Serial.print("Button pressed. Current state: ");
+    Serial.println(currentState);
+
     switch (currentState)
     {
     case MENU:
+        Serial.print("Menu index: ");
+        Serial.println(menuIndex);
         if (menuIndex == 0)
         { // UP selected
             startCountingUp();
@@ -142,22 +150,6 @@ void FlowTimer::handleButtonPresses(unsigned long currentMillis)
         else if (menuIndex == 2)
         { // Reset selected
             resetFlowMinutes();
-        }
-        else if (menuIndex == 3)
-        { // LB On/Off selected
-            lightbar->onOff();
-        }
-        else if (menuIndex == 4)
-        { // LB Brighter selected
-            lightbar->brighter();
-        }
-        else if (menuIndex == 5)
-        { // LB Warmer selected
-            lightbar->warmer();
-        }
-        else if (menuIndex == 6)
-        { // Settings selected
-            currentState = SETTINGS;
         }
         break;
 
@@ -171,22 +163,6 @@ void FlowTimer::handleButtonPresses(unsigned long currentMillis)
 
     case COUNTING_DOWN:
         stopCountingDown();
-        break;
-    case SETTINGS:
-        if (settingsMenuIndex == 0)
-        { // Brightness
-            uint8_t brightness = settings->getBrightness();
-            brightness = (brightness + 16) % 256;
-            settings->setBrightness(brightness);
-            lightbar->setBrightness(brightness);
-        }
-        else if (settingsMenuIndex == 1)
-        { // Temperature
-            uint8_t temperature = settings->getTemperature();
-            temperature = (temperature + 16) % 256;
-            settings->setTemperature(temperature);
-            lightbar->setTemperature(temperature);
-        }
         break;
     }
     updateDisplay();
@@ -331,20 +307,21 @@ void FlowTimer::handleRotaryInput()
         return;
 
     lastActivityTime = millis();
+    Serial.print("Rotary input detected. Rotation: ");
+    Serial.println(rotation);
 
     if (currentState == MENU)
     {
-        menuIndex = (menuIndex + rotation + 7) % 7;
+        menuIndex = (menuIndex + rotation + 3) % 3;
+        Serial.print("New menu index: ");
+        Serial.println(menuIndex);
         updateDisplay();
     }
     else if (currentState == SELECTING_DOWN_DURATION)
     {
         countdownValue = max(1, countdownValue + rotation);
-        updateDisplay();
-    }
-    else if (currentState == SETTINGS)
-    {
-        settingsMenuIndex = (settingsMenuIndex + rotation + 2) % 2;
+        Serial.print("New countdown value: ");
+        Serial.println(countdownValue);
         updateDisplay();
     }
 }

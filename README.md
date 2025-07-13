@@ -29,11 +29,11 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
 | NRF24L01+ SCK | D5 (GPIO14) |
 | OLED VCC | 5V |
 | OLED GND | GND |
-| OLED SCL | GPIO4 |
-| OLED SDA | GPIO0 |
-| Rotary CLK | GPIO16 |
-| Rotary DT | GPIO3 |
-| Rotary SW | GPIO1 |
+| OLED SCL | D1 (GPIO5) |
+| OLED SDA | D2 (GPIO4) |
+| Rotary CLK | D6 (GPIO12) |
+| Rotary DT | D7 (GPIO13) |
+| Rotary SW | D4 (GPIO2) |
 | Rotary + | 5V |
 | Rotary GND | GND |
 
@@ -56,17 +56,17 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
         |                 |      |                 |
         |             VCC |<---->| 5V              |
         |             GND |<---->| GND             |
-        |             SCL |<---->| GPIO4           |
-        |             SDA |<---->| GPIO0           |
+        |             SCL |<---->| D1 (GPIO5)      |
+        |             SDA |<---->| D2 (GPIO4)      |
         +-----------------+      +-----------------+
         +-----------------+      |                 |
         |  Rotary Encoder |      |                 |
         |                 |      |                 |
         |               + |<---->| 5V              |
         |             GND |<---->| GND             |
-        |             CLK |<---->| GPIO16          |
-        |              DT |<---->| GPIO3           |
-        |              SW |<---->| GPIO1           |
+        |             CLK |<---->| D6 (GPIO12)     |
+        |              DT |<---->| D7 (GPIO13)     |
+        |              SW |<---->| D4 (GPIO2)      |
         +-----------------+      +-----------------+
 ```
 

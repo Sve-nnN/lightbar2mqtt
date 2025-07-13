@@ -47,15 +47,12 @@ private:
         COUNTING_DOWN,          /**< Counting down state. */
         SELECTING_DOWN_DURATION,/**< Selecting the countdown duration. */
         IDLE,                   /**< Idle state. */
-        SETTINGS                /**< Settings menu. */
     };
     State currentState = MENU; /**< The current state of the FlowTimer. */
 
     // Menu
     int menuIndex = 0; /**< The current index of the main menu. */
-    String menuOptions[7] = {"UP", "DOWN", "Reset", "LB On/Off", "LB Brighter", "LB Warmer", "Settings"}; /**< The options for the main menu. */
-    int settingsMenuIndex = 0; /**< The current index of the settings menu. */
-    String settingsMenuOptions[2] = {"Brightness", "Temperature"}; /**< The options for the settings menu. */
+    String menuOptions[3] = {"UP", "DOWN", "Reset"}; /**< The options for the main menu. */
 
     // Time
     int flowMinutes = 0; /**< The total number of minutes in flow state. */
