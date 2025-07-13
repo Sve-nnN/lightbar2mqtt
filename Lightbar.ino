@@ -47,6 +47,12 @@ void setup()
   Serial.println("# https://github.com/ebinf/lightbar2mqtt #");
   Serial.println("##########################################");
 
+  settings.setup();
+
+  Lightbar *lightbar = new Lightbar(&radio, LIGHTBARS[0].serial, LIGHTBARS[0].name);
+  flowTimer = new FlowTimer(lightbar, &settings);
+  flowTimer->setup();
+
   radio.setup();
 
   setupWifi();
@@ -57,12 +63,7 @@ void setup()
     mqtt.addRemote(remote);
   }
 
-  settings.setup();
-
-  Lightbar *lightbar = new Lightbar(&radio, LIGHTBARS[0].serial, LIGHTBARS[0].name);
   mqtt.addLightbar(lightbar);
-  flowTimer = new FlowTimer(lightbar, &settings);
-  flowTimer->setup();
 
   mqtt.setup();
 }

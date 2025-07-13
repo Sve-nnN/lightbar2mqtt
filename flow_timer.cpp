@@ -8,7 +8,10 @@
 
 FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1)
 {
-    this->lightbar = lightbar;
+    if (lightbar != nullptr)
+    {
+        this->lightbar = lightbar;
+    }
     this->settings = settings;
 }
 
