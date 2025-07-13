@@ -8,7 +8,7 @@
 // Rotary Encoder
 #define PIN_CLK 16
 #define PIN_DT 2
-#define PIN_SW 3
+#define PIN_SW A0
 
 // OLED Display
 #define PIN_SDA 0
