@@ -20,6 +20,7 @@ This project combines a powerful focus timer with a smart light bar controller, 
 - Adafruit SSD1306 OLED Display (128x64)
 - KY-040 Rotary Encoder
 - Arduino IDE or PlatformIO
+- [RotaryEncoder](https://github.com/mathertel/RotaryEncoder) library by Matthias Hertel
 
 ## Pinout
 
@@ -47,6 +48,7 @@ This project combines a powerful focus timer with a smart light bar controller, 
 1.  **Hardware:** Connect all the components according to the pinout table above.
 2.  **Software:**
     - Open the project in the Arduino IDE or PlatformIO.
+    - Install the `RotaryEncoder` library by Matthias Hertel from the Arduino IDE's library manager.
     - Create a `config.h` file by copying `config-example.h`.
     - In `config.h`, configure your WiFi credentials, MQTT broker details, and the serial numbers for your light bar and remote.
     - Upload the firmware to your ESP8266.
