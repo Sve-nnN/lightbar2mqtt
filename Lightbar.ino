@@ -5,10 +5,14 @@
 #include "radio.h"
 #include "lightbar.h"
 #include "mqtt.h"
+#include "flow_timer.h"
+#include "settings.h"
 
 WiFiClient wifiClient;
 Radio radio(RADIO_PIN_CE, RADIO_PIN_CSN);
 MQTT mqtt(&wifiClient, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, MQTT_ROOT_TOPIC, HOME_ASSISTANT_DISCOVERY, HOME_ASSISTANT_DISCOVERY_PREFIX);
+Settings settings;
+FlowTimer *flowTimer;
 
 void setupWifi()
 {
@@ -53,11 +57,12 @@ void setup()
     mqtt.addRemote(remote);
   }
 
-  for (int i = 0; i < sizeof(LIGHTBARS) / sizeof(SerialWithName); i++)
-  {
-    Lightbar *lightbar = new Lightbar(&radio, LIGHTBARS[i].serial, LIGHTBARS[i].name);
-    mqtt.addLightbar(lightbar);
-  }
+  settings.setup();
+
+  Lightbar *lightbar = new Lightbar(&radio, LIGHTBARS[0].serial, LIGHTBARS[0].name);
+  mqtt.addLightbar(lightbar);
+  flowTimer = new FlowTimer(lightbar, &settings);
+  flowTimer->setup();
 
   mqtt.setup();
 }
@@ -72,4 +77,5 @@ void loop()
 
   mqtt.loop();
   radio.loop();
+  flowTimer->loop();
 }
