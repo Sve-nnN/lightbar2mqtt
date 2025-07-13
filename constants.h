@@ -6,13 +6,13 @@
 
 // Pin definitions
 // Rotary Encoder
-#define PIN_CLK D6
-#define PIN_DT D7
-#define PIN_SW D4
+#define PIN_CLK 12
+#define PIN_DT 13
+#define PIN_SW 2
 
 // OLED Display
-#define PIN_SDA D2
-#define PIN_SCL D1
+#define PIN_SDA 4
+#define PIN_SCL 5
 
 namespace constants
 {

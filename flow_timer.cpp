@@ -100,10 +100,6 @@ void FlowTimer::updateDisplay()
     {
         mainRowText = "IDLE?";
     }
-    else if (currentState == SETTINGS)
-    {
-        mainRowText = settingsMenuOptions[settingsMenuIndex];
-    }
 
     int mainRowTextWidth = mainRowText.length() * 24; // TextSize 4, so 24 pixels per char
     int mainRowX = (128 - mainRowTextWidth) / 2;      // Calculate centered X position
