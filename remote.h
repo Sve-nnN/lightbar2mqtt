@@ -17,7 +17,6 @@ public:
     const char *getName();
 
     bool registerCommandListener(std::function<void(Remote *, byte, byte)> callback);
-    bool unregisterCommandListener(std::function<void(Remote *, byte, byte)> callback);
 
     void callback(byte command, byte options);
 
