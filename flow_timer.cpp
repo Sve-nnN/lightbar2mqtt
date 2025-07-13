@@ -58,6 +58,7 @@ void FlowTimer::initDisplay()
 
 void FlowTimer::updateDisplay()
 {
+    Serial.println("Updating display...");
     display.setTextColor(WHITE);
     display.clearDisplay();
 
@@ -76,6 +77,9 @@ void FlowTimer::updateDisplay()
     {
         topRowText = "Flow: " + String(flowMinutes); // Display total flow minutes when not counting
     }
+
+    Serial.print("Top row text: ");
+    Serial.println(topRowText);
 
     int topRowTextWidth = topRowText.length() * 12; // TextSize 2, so 12 pixels per char
     int topRowX = (128 - topRowTextWidth) / 2;      // Center the text on the top row
@@ -104,6 +108,9 @@ void FlowTimer::updateDisplay()
         mainRowText = "IDLE?";
     }
 
+    Serial.print("Main row text: ");
+    Serial.println(mainRowText);
+
     int mainRowTextWidth = mainRowText.length() * 24; // TextSize 4, so 24 pixels per char
     int mainRowX = (128 - mainRowTextWidth) / 2;      // Calculate centered X position
 
@@ -112,6 +119,7 @@ void FlowTimer::updateDisplay()
     display.print(mainRowText);
 
     display.display(); // Show the updated display
+    Serial.println("Display updated.");
 }
 
 bool FlowTimer::buttonPressed()
