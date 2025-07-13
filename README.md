@@ -31,8 +31,8 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
 | OLED GND | GND |
 | OLED SCL | D1 |
 | OLED SDA | D2 |
-| Rotary CLK | D6 |
-| Rotary DT | D7 |
+| Rotary CLK | D0 |
+| Rotary DT | D3 |
 | Rotary SW | D4 |
 | Rotary + | 5V |
 | Rotary GND | GND |
@@ -64,8 +64,8 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
         |                 |      |                 |
         |               + |<---->| 5V              |
         |             GND |<---->| GND             |
-        |             CLK |<---->| D6              |
-        |              DT |<---->| D7              |
+        |             CLK |<---->| D0              |
+        |              DT |<---->| D3              |
         |              SW |<---->| D4              |
         +-----------------+      +-----------------+
 ```
