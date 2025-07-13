@@ -16,18 +16,26 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
 - Módulo NRF24L01+ SMD
 - Arduino IDE o PlatformIO
 
-## Conexión del NRF24L01+ SMD al ESP8266
+## Conexión de componentes
 
-| NRF24L01+ | ESP8266 (NodeMCU) |
+| Componente | Pin ESP8266 (NodeMCU) |
 | :--- | :--- |
-| VCC | 3.3V |
-| GND | GND |
-| CSN | D8 (GPIO15) |
-| CE | D4 (GPIO2) |
-| MOSI | D7 (GPIO13) |
-| MISO | D6 (GPIO12) |
-| SCK | D5 (GPIO14) |
-| IRQ | No conectado |
+| NRF24L01+ VCC | 3.3V |
+| NRF24L01+ GND | GND |
+| NRF24L01+ CSN | D8 (GPIO15) |
+| NRF24L01+ CE | D1 (GPIO5) |
+| NRF24L01+ MOSI | D7 (GPIO13) |
+| NRF24L01+ MISO | D6 (GPIO12) |
+| NRF24L01+ SCK | D5 (GPIO14) |
+| OLED VCC | 3.3V |
+| OLED GND | GND |
+| OLED SCL | D2 (GPIO4) |
+| OLED SDA | D3 (GPIO0) |
+| Rotary CLK | D6 (GPIO12) |
+| Rotary DT | D7 (GPIO13) |
+| Rotary SW | D4 (GPIO2) |
+| Rotary + | 3.3V |
+| Rotary GND | GND |
 
 **Diagrama de conexión:**
 
@@ -38,10 +46,27 @@ Este proyecto permite controlar la barra de luz de monitor de Xiaomi (MJGJD01YL)
         |             VCC |<---->| 3.3V            |
         |             GND |<---->| GND             |
         |             CSN |<---->| D8 (GPIO15)     |
-        |              CE |<---->| D4 (GPIO2)      |
+        |              CE |<---->| D1 (GPIO5)      |
         |            MOSI |<---->| D7 (GPIO13)     |
         |            MISO |<---->| D6 (GPIO12)     |
         |             SCK |<---->| D5 (GPIO14)     |
+        +-----------------+      +-----------------+
+        +-----------------+      |                 |
+        |   OLED Display  |      |                 |
+        |                 |      |                 |
+        |             VCC |<---->| 3.3V            |
+        |             GND |<---->| GND             |
+        |             SCL |<---->| D2 (GPIO4)      |
+        |             SDA |<---->| D3 (GPIO0)      |
+        +-----------------+      +-----------------+
+        +-----------------+      |                 |
+        |  Rotary Encoder |      |                 |
+        |                 |      |                 |
+        |               + |<---->| 3.3V            |
+        |             GND |<---->| GND             |
+        |             CLK |<---->| D6 (GPIO12)     |
+        |              DT |<---->| D7 (GPIO13)     |
+        |              SW |<---->| D4 (GPIO2)      |
         +-----------------+      +-----------------+
 ```
 
@@ -101,3 +126,22 @@ La carga útil del comando debe ser un objeto JSON con las siguientes propiedade
     "color_temp": 250
 }
 ```
+
+### Temporizador Pomodoro (Flow Timer)
+
+El dispositivo también incluye un temporizador Pomodoro controlado por un codificador rotatorio y una pantalla OLED.
+
+**Menú principal:**
+
+-   **UP**: Inicia una sesión de "enfoque" (cuenta ascendente).
+-   **DOWN**: Inicia una sesión de "descanso" (cuenta descendente desde un tiempo configurable).
+-   **Reset**: Reinicia los minutos totales de flujo.
+-   **LB On/Off**: Enciende/apaga la barra de luces.
+-   **LB Brighter**: Aumenta el brillo de la barra de luces.
+-   **LB Warmer**: Aumenta la temperatura de color de la barra de luces.
+-   **Settings**: Accede al menú de ajustes.
+
+**Menú de ajustes:**
+
+-   **Brightness**: Ajusta el brillo de la barra de luces.
+-   **Temperature**: Ajusta la temperatura de color de la barra de luces.

@@ -1,3 +1,8 @@
+/**
+ * @file flow_timer.cpp
+ * @brief Implements the FlowTimer class.
+ */
+
 #include "flow_timer.h"
 #include "constants.h"
 
@@ -49,41 +54,43 @@ void FlowTimer::updateDisplay()
     display.setTextColor(WHITE);
     display.clearDisplay();
 
+    // Display top row
     String topRowText;
 
     if (currentState == COUNTING_UP)
     {
-        topRowText = "Focus! \x18";
+        topRowText = "Focus! \x18"; // Focus with upward triangle for counting UP
     }
     else if (currentState == COUNTING_DOWN)
     {
-        topRowText = "Focus! \x19";
+        topRowText = "Focus! \x19"; // Focus with downward triangle for counting DOWN
     }
     else
     {
-        topRowText = "Flow: " + String(flowMinutes);
+        topRowText = "Flow: " + String(flowMinutes); // Display total flow minutes when not counting
     }
 
-    int topRowTextWidth = topRowText.length() * 12;
-    int topRowX = (128 - topRowTextWidth) / 2;
+    int topRowTextWidth = topRowText.length() * 12; // TextSize 2, so 12 pixels per char
+    int topRowX = (128 - topRowTextWidth) / 2;      // Center the text on the top row
 
-    display.setTextSize(2);
-    display.setCursor(topRowX, 0);
+    display.setTextSize(2);      // Larger size for top row
+    display.setCursor(topRowX, 0); // Centered on top row
     display.print(topRowText);
 
+    // Display main row (menu or counting values)
     String mainRowText;
 
     if (currentState == MENU)
     {
-        mainRowText = menuOptions[menuIndex];
+        mainRowText = menuOptions[menuIndex]; // Display UP, DOWN, or Reset in the menu
     }
     else if (currentState == COUNTING_UP)
     {
-        mainRowText = String(elapsedMinutes);
+        mainRowText = String(elapsedMinutes); // Display counting up minutes
     }
     else if (currentState == COUNTING_DOWN || currentState == SELECTING_DOWN_DURATION)
     {
-        mainRowText = String(countdownValue);
+        mainRowText = String(countdownValue); // Display countdown minutes
     }
     else if (currentState == IDLE)
     {
@@ -94,14 +101,14 @@ void FlowTimer::updateDisplay()
         mainRowText = settingsMenuOptions[settingsMenuIndex];
     }
 
-    int mainRowTextWidth = mainRowText.length() * 24;
-    int mainRowX = (128 - mainRowTextWidth) / 2;
+    int mainRowTextWidth = mainRowText.length() * 24; // TextSize 4, so 24 pixels per char
+    int mainRowX = (128 - mainRowTextWidth) / 2;      // Calculate centered X position
 
-    display.setTextSize(4);
-    display.setCursor(mainRowX, 30);
+    display.setTextSize(4);       // Larger size for main row
+    display.setCursor(mainRowX, 30); // Centered on main row
     display.print(mainRowText);
 
-    display.display();
+    display.display(); // Show the updated display
 }
 
 bool FlowTimer::buttonPressed()
