@@ -30,8 +30,7 @@ public:
   };
 
   enum class LatchMode {
-    FOUR3 = 1, // 4 steps, Latch at position 3 only (compatible to older version
-s)
+    FOUR3 = 1, // 4 steps, Latch at position 3 only (compatible to older versions)
     FOUR0 = 2, // 4 steps, Latch at position 0 (reverse wirings)
     TWO03 = 3  // 2 steps, Latch at position 0 and 3
   };
@@ -42,15 +41,13 @@ s)
   // retrieve the current position
   long getPosition();
 
-  // simple retrieve of the direction the knob was rotated last time. 0 = No rot
-ation, 1 = Clockwise, -1 = Counter Clockwise
+  // simple retrieve of the direction the knob was rotated last time. 0 = No rotation, 1 = Clockwise, -1 = Counter Clockwise
   Direction getDirection();
 
   // adjust the current position
   void setPosition(long newPosition);
 
-  // call this function every some milliseconds or by using an interrupt for han
-dling state changes of the rotary encoder.
+  // call this function every some milliseconds or by using an interrupt for handling state changes of the rotary encoder.
   void tick(void);
 
   // Returns the time in milliseconds between the current observed
@@ -68,13 +65,10 @@ private:
 
   volatile long _position;        // Internal position (4 times _positionExt)
   volatile long _positionExt;     // External position
-  volatile long _positionExtPrev; // External position (used only for direction
-checking)
+  volatile long _positionExtPrev; // External position (used only for direction checking)
 
-  unsigned long _positionExtTime;     // The time the last position change was d
-etected.
-  unsigned long _positionExtTimePrev; // The time the previous position change w
-as detected.
+  unsigned long _positionExtTime;     // The time the last position change was detected.
+  unsigned long _positionExtTimePrev; // The time the previous position change was detected.
 };
 
 #endif

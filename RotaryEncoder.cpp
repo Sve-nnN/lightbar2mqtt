@@ -19,8 +19,7 @@
 #define LATCH3 3 // input state at position 3
 
 
-// The array holds the values �1 for the entries where a position was decremente
-d,
+// The array holds the values 1 for the entries where a position was decremented,
 // a 1 for the entries where the position was incremented
 // and 0 in all the other (no change or not valid) cases.
 
@@ -158,10 +157,8 @@ unsigned long RotaryEncoder::getMillisBetweenRotations() const
 
 unsigned long RotaryEncoder::getRPM()
 {
-  // calculate max of difference in time between last position changes or last c
-hange and now.
-  unsigned long timeBetweenLastPositions = _positionExtTime - _positionExtTimePr
-ev;
+  // calculate max of difference in time between last position changes or last change and now.
+  unsigned long timeBetweenLastPositions = _positionExtTime - _positionExtTimePrev;
   unsigned long timeToLastPosition = millis() - _positionExtTime;
   unsigned long t = max(timeBetweenLastPositions, timeToLastPosition);
   return 60000.0 / ((float)(t * 20));
