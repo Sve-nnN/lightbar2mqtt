@@ -4,6 +4,19 @@
 #include <stdint.h>
 #include <Arduino.h>
 
+// Pin definitions
+#define RADIO_PIN_CE D1
+#define RADIO_PIN_CSN D8
+
+// Rotary Encoder
+#define PIN_CLK D2
+#define PIN_DT D3
+#define PIN_SW D4
+
+// OLED Display
+#define PIN_SDA D7
+#define PIN_SCL D6
+
 namespace constants
 {
     // The version number of lightbar2mqtt.

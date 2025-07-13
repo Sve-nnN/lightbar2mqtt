@@ -6,7 +6,7 @@
 #include "flow_timer.h"
 #include "constants.h"
 
-FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, D4)
+FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, PIN_SW)
 {
     this->lightbar = lightbar;
     this->settings = settings;
