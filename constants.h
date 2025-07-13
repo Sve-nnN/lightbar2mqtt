@@ -11,8 +11,8 @@
 #define PIN_SW D4
 
 // OLED Display
-#define PIN_SDA D2
-#define PIN_SCL D1
+#define PIN_SDA D1
+#define PIN_SCL D2
 
 namespace constants
 {
