@@ -1,51 +1,62 @@
-/**
- * @file flow_timer.cpp
- * @brief Implements the FlowTimer class.
- */
-
 #include "flow_timer.h"
 #include "constants.h"
 
-FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1)
+FlowTimer::FlowTimer(Lightbar *lightbar, Settings *settings) : display(128, 64, &Wire, -1),
+                                                              encoder(PIN_CLK, PIN_DT, PIN_SW)
 {
-    if (lightbar != nullptr)
-    {
-        this->lightbar = lightbar;
-    }
+    this->lightbar = lightbar;
     this->settings = settings;
 }
 
 void FlowTimer::setup()
 {
-    Serial.println("--- FlowTimer Setup ---");
-    initHardware();
-    initDisplay();
-    updateDisplay();
-    Serial.println("FlowTimer setup complete, starting loop...");
+    setupOled();
+    setupRotaryEncoder();
+    currentState = STATE_MENU;
+    menuPosition = 0;
+    totalFocusTime = 0;
+    sessionStartTime = 0;
+    sessionDuration = 0;
+    lastActivityTime = millis();
+    countDownTime = 25;
 }
 
 void FlowTimer::loop()
 {
-    unsigned long currentMillis = millis();
+    handleRotaryEncoder();
 
-    handleRotaryInput();
-    handleButtonPresses(currentMillis);
-    handleCounting(currentMillis);
-    handleInactivity(currentMillis);
+    switch (currentState)
+    {
+    case STATE_MENU:
+        displayMenu();
+        break;
+    case STATE_COUNT_UP:
+        displayCountUp();
+        break;
+    case STATE_COUNT_DOWN_SETUP:
+        displayCountDownSetup();
+        break;
+    case STATE_COUNT_DOWN:
+        displayCountDown();
+        break;
+    case STATE_IDLE:
+        displayIdle();
+        break;
+    }
+
+    if (millis() - lastActivityTime > constants::DISPLAY_OFF_TIMEOUT)
+    {
+        display.clearDisplay();
+        display.display();
+    }
+    else if (millis() - lastActivityTime > constants::IDLE_TIMEOUT)
+    {
+        currentState = STATE_IDLE;
+    }
 }
 
-void FlowTimer::initHardware()
+void FlowTimer::setupOled()
 {
-    Serial.println("Initializing hardware...");
-    pinMode(PIN_CLK, INPUT);
-    pinMode(PIN_DT, INPUT);
-    pinMode(PIN_SW, INPUT);
-    Serial.println("Hardware initialized.");
-}
-
-void FlowTimer::initDisplay()
-{
-    Wire.begin(PIN_SDA, PIN_SCL);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
     {
         Serial.println(F("SSD1306 allocation failed"));
@@ -53,325 +64,235 @@ void FlowTimer::initDisplay()
             ;
     }
     display.clearDisplay();
-    Serial.println("Display initialized.");
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.println("IGOR");
+    display.display();
+    delay(1000);
 }
 
-void FlowTimer::updateDisplay()
+void FlowTimer::setupRotaryEncoder()
 {
-    Serial.println("Updating display...");
-    display.setTextColor(WHITE);
-    display.clearDisplay();
+    encoder.begin();
+}
 
-    // Display top row
-    String topRowText;
-
-    if (currentState == COUNTING_UP)
+void FlowTimer::handleRotaryEncoder()
+{
+    static int lastPos = 0;
+    int newPos = encoder.getPosition();
+    if (lastPos != newPos)
     {
-        topRowText = "Focus! \x18"; // Focus with upward triangle for counting UP
+        handleRotate();
+        lastPos = newPos;
     }
-    else if (currentState == COUNTING_DOWN)
+
+    RotaryEncoder::Direction dir = encoder.getDirection();
+    if (dir != RotaryEncoder::NOROTATION)
     {
-        topRowText = "Focus! \x19"; // Focus with downward triangle for counting DOWN
+        handleRotate();
+    }
+
+    if (encoder.isEncoderButtonClicked())
+    {
+        handleClick();
+    }
+}
+
+void FlowTimer::handleClick()
+{
+    lastActivityTime = millis();
+    switch (currentState)
+    {
+    case STATE_MENU:
+        if (menuPosition == 0)
+        {
+            currentState = STATE_COUNT_UP;
+            sessionStartTime = millis();
+        }
+        else if (menuPosition == 1)
+        {
+            currentState = STATE_COUNT_DOWN_SETUP;
+        }
+        else if (menuPosition == 2)
+        {
+            reset();
+        }
+        break;
+    case STATE_COUNT_UP:
+        sessionDuration = (millis() - sessionStartTime) / 60000;
+        totalFocusTime += sessionDuration;
+        currentState = STATE_MENU;
+        break;
+    case STATE_COUNT_DOWN_SETUP:
+        currentState = STATE_COUNT_DOWN;
+        sessionStartTime = millis();
+        break;
+    case STATE_COUNT_DOWN:
+        sessionDuration = (millis() - sessionStartTime) / 60000;
+        totalFocusTime += sessionDuration;
+        currentState = STATE_MENU;
+        break;
+    case STATE_IDLE:
+        currentState = STATE_MENU;
+        break;
+    }
+}
+
+void FlowTimer::handleRotate()
+{
+    lastActivityTime = millis();
+    RotaryEncoder::Direction dir = encoder.getDirection();
+
+    if (currentState == STATE_MENU)
+    {
+        if (dir == RotaryEncoder::UP)
+        {
+            menuPosition = (menuPosition + 1) % 3;
+        }
+        else if (dir == RotaryEncoder::DOWN)
+        {
+            menuPosition = (menuPosition - 1 + 3) % 3;
+        }
+    }
+    else if (currentState == STATE_COUNT_DOWN_SETUP)
+    {
+        if (dir == RotaryEncoder::UP)
+        {
+            countDownTime++;
+        }
+        else if (dir == RotaryEncoder::DOWN)
+        {
+            countDownTime--;
+            if (countDownTime < 1)
+            {
+                countDownTime = 1;
+            }
+        }
+    }
+}
+
+void FlowTimer::displayMenu()
+{
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0, 0);
+    display.print("Total: ");
+    display.print(totalFocusTime);
+    display.println(" min");
+
+    display.setTextSize(2);
+    display.setCursor(20, 20);
+    if (menuPosition == 0)
+    {
+        display.println("> UP");
     }
     else
     {
-        topRowText = "Flow: " + String(flowMinutes); // Display total flow minutes when not counting
+        display.println("  UP");
     }
 
-    Serial.print("Top row text: ");
-    Serial.println(topRowText);
-
-    int topRowTextWidth = topRowText.length() * 12; // TextSize 2, so 12 pixels per char
-    int topRowX = (128 - topRowTextWidth) / 2;      // Center the text on the top row
-
-    display.setTextSize(2);      // Larger size for top row
-    display.setCursor(topRowX, 0); // Centered on top row
-    display.print(topRowText);
-
-    // Display main row (menu or counting values)
-    String mainRowText;
-
-    if (currentState == MENU)
+    display.setCursor(20, 40);
+    if (menuPosition == 1)
     {
-        mainRowText = menuOptions[menuIndex]; // Display UP, DOWN, or Reset in the menu
+        display.println("> DOWN");
     }
-    else if (currentState == COUNTING_UP)
+    else
     {
-        mainRowText = String(elapsedMinutes); // Display counting up minutes
+        display.println("  DOWN");
     }
-    else if (currentState == COUNTING_DOWN || currentState == SELECTING_DOWN_DURATION)
+
+    display.setTextSize(1);
+    display.setCursor(20, 60);
+    if (menuPosition == 2)
     {
-        mainRowText = String(countdownValue); // Display countdown minutes
+        display.println("> Reset");
     }
-    else if (currentState == IDLE)
+    else
     {
-        mainRowText = "IDLE?";
+        display.println("  Reset");
     }
-
-    Serial.print("Main row text: ");
-    Serial.println(mainRowText);
-
-    int mainRowTextWidth = mainRowText.length() * 24; // TextSize 4, so 24 pixels per char
-    int mainRowX = (128 - mainRowTextWidth) / 2;      // Calculate centered X position
-
-    display.setTextSize(4);       // Larger size for main row
-    display.setCursor(mainRowX, 30); // Centered on main row
-    display.print(mainRowText);
-
-    display.display(); // Show the updated display
-    Serial.println("Display updated.");
+    display.display();
 }
 
-bool FlowTimer::buttonPressed()
+void FlowTimer::displayCountUp()
 {
-    if (digitalRead(PIN_SW) == LOW && (millis() - buttonDebounceTime > buttonDebounceDelay))
-    {
-        buttonDebounceTime = millis();
-        lastActivityTime = millis();
-        return true;
-    }
-    return false;
+    unsigned long elapsed = (millis() - sessionStartTime) / 60000;
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(20, 20);
+    display.println("Focus!");
+    display.setTextSize(3);
+    display.setCursor(40, 40);
+    display.print(elapsed);
+    display.display();
 }
 
-void FlowTimer::handleButtonPresses(unsigned long currentMillis)
-{
-    if (!buttonPressed())
-        return;
-
-    Serial.print("Button pressed. Current state: ");
-    Serial.println(currentState);
-
-    switch (currentState)
-    {
-    case MENU:
-        Serial.print("Menu index: ");
-        Serial.println(menuIndex);
-        if (menuIndex == 0)
-        { // UP selected
-            startCountingUp();
-        }
-        else if (menuIndex == 1)
-        { // DOWN selected
-            startSelectingDownDuration();
-        }
-        else if (menuIndex == 2)
-        { // Reset selected
-            resetFlowMinutes();
-        }
-        break;
-
-    case SELECTING_DOWN_DURATION:
-        confirmCountdownSelection();
-        break;
-
-    case COUNTING_UP:
-        stopCountingUp();
-        break;
-
-    case COUNTING_DOWN:
-        stopCountingDown();
-        break;
-    }
-    updateDisplay();
-}
-
-void FlowTimer::startCountingUp()
-{
-    currentState = COUNTING_UP;
-    elapsedMinutes = 0;
-    isCounting = true;
-    lastActivityTime = millis();
-    Serial.println("Counting UP started.");
-}
-
-void FlowTimer::startSelectingDownDuration()
-{
-    currentState = SELECTING_DOWN_DURATION;
-    countdownValue = 20;
-    lastActivityTime = millis();
-    Serial.println("Selecting DOWN duration.");
-}
-
-void FlowTimer::confirmCountdownSelection()
-{
-    initialCountdownValue = countdownValue;
-    currentState = COUNTING_DOWN;
-    isCounting = true;
-    lastActivityTime = millis();
-    Serial.print("Counting DOWN started with ");
-    Serial.print(countdownValue);
-    Serial.println(" minutes.");
-}
-
-void FlowTimer::stopCountingUp()
-{
-    flowMinutes += elapsedMinutes;
-    successAnimation();
-    currentState = MENU;
-    isCounting = false;
-    Serial.println("Counting UP stopped. Returning to MENU.");
-}
-
-void FlowTimer::stopCountingDown()
-{
-    flowMinutes += (initialCountdownValue - countdownValue);
-    successAnimation();
-    currentState = MENU;
-    isCounting = false;
-    Serial.println("Counting DOWN stopped. Returning to MENU.");
-}
-
-void FlowTimer::resetFlowMinutes()
-{
-    flowMinutes = 0;
-    Serial.println("Flow minutes reset to 0.");
-    updateDisplay();
-}
-
-void FlowTimer::handleCounting(unsigned long currentMillis)
-{
-    if (!isCounting || (currentMillis - previousMillis < 60000))
-        return;
-
-    previousMillis = currentMillis;
-
-    if (currentState == COUNTING_UP)
-    {
-        elapsedMinutes++;
-        updateDisplay();
-        Serial.print("Counting UP: ");
-        Serial.println(elapsedMinutes);
-    }
-    else if (currentState == COUNTING_DOWN)
-    {
-        countdownValue--;
-        if (countdownValue <= 0)
-        {
-            flowMinutes += initialCountdownValue;
-            successAnimation();
-            currentState = MENU;
-            isCounting = false;
-            Serial.println("Countdown finished, returning to MENU.");
-        }
-        updateDisplay();
-        Serial.print("Counting DOWN: ");
-        Serial.println(countdownValue);
-    }
-}
-
-void FlowTimer::successAnimation()
+void FlowTimer::displayCountDownSetup()
 {
     display.clearDisplay();
-    int centerX = 64, centerY = 32;
+    display.setTextSize(2);
+    display.setCursor(20, 20);
+    display.println("Set Time");
+    display.setTextSize(3);
+    display.setCursor(40, 40);
+    display.print(countDownTime);
+    display.display();
+}
 
-    for (int radius = 2; radius <= 30; radius += 2)
+void FlowTimer::displayCountDown()
+{
+    unsigned long elapsed = (millis() - sessionStartTime) / 1000;
+    unsigned long remaining = (countDownTime * 60) - elapsed;
+    if (remaining < 0)
     {
-        display.drawCircle(centerX, centerY, radius, WHITE);
-        display.display();
-        delay(100);
+        remaining = 0;
+    }
 
-        if (radius % 4 == 0)
-        {
-            display.clearDisplay();
-            display.display();
-            delay(2);
-        }
+    if (remaining == 0)
+    {
+        displaySuccess();
+        totalFocusTime += countDownTime;
+        currentState = STATE_MENU;
+        return;
     }
 
     display.clearDisplay();
     display.setTextSize(2);
     display.setCursor(20, 20);
-    display.print("SUCCESS!");
+    display.println("Focus!");
+    display.setTextSize(3);
+    display.setCursor(40, 40);
+    display.print(remaining / 60);
+    display.print(":");
+    if (remaining % 60 < 10)
+    {
+        display.print("0");
+    }
+    display.print(remaining % 60);
     display.display();
-    delay(1000);
+}
+
+void FlowTimer::displayIdle()
+{
     display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(20, 30);
+    display.println("IDLE?");
     display.display();
 }
 
-int FlowTimer::getRotation()
+void FlowTimer::displaySuccess()
 {
-    static int previousCLK = digitalRead(PIN_CLK);
-    int currentCLK = digitalRead(PIN_CLK);
-
-    if (currentCLK == LOW && previousCLK == HIGH && (millis() - lastRotaryTime > rotaryDebounceDelay))
-    {
-        lastRotaryTime = millis();
-        int DTValue = digitalRead(PIN_DT);
-
-        previousCLK = currentCLK;
-
-        return (DTValue != currentCLK) ? 1 : -1;
-    }
-
-    previousCLK = currentCLK;
-    return 0;
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(20, 30);
+    display.println("Success!");
+    display.display();
+    delay(2000);
 }
 
-void FlowTimer::handleRotaryInput()
+void FlowTimer::reset()
 {
-    int rotation = getRotation();
-    if (rotation == 0)
-        return;
-
-    lastActivityTime = millis();
-    Serial.print("Rotary input detected. Rotation: ");
-    Serial.println(rotation);
-
-    if (currentState == MENU)
-    {
-        menuIndex = (menuIndex + rotation + 3) % 3;
-        Serial.print("New menu index: ");
-        Serial.println(menuIndex);
-        updateDisplay();
-    }
-    else if (currentState == SELECTING_DOWN_DURATION)
-    {
-        countdownValue = max(1, countdownValue + rotation);
-        Serial.print("New countdown value: ");
-        Serial.println(countdownValue);
-        updateDisplay();
-    }
-}
-
-void FlowTimer::handleInactivity(unsigned long currentMillis)
-{
-    if (currentMillis >= lastActivityTime)
-    {
-        unsigned long timeSinceLastActivity = currentMillis - lastActivityTime;
-
-        if ((currentState == MENU || currentState == SELECTING_DOWN_DURATION) &&
-            (timeSinceLastActivity > inactivityLimit))
-        {
-            if (currentState != IDLE)
-            {
-                currentState = IDLE;
-                idleStartTime = millis();
-                updateDisplay();
-                Serial.println("IDLE state entered due to inactivity.");
-            }
-        }
-    }
-
-    if (currentState == IDLE && !displayOff && (currentMillis - idleStartTime > displayOffTimeLimit))
-    {
-        displayOff = true;
-        display.ssd1306_command(SSD1306_DISPLAYOFF);
-        Serial.println("Display turned off after 30 minutes of IDLE.");
-    }
-
-    if (currentState == IDLE && (getRotation() != 0 || buttonPressed()))
-    {
-        currentState = MENU;
-        lastActivityTime = millis();
-
-        if (displayOff)
-        {
-            display.ssd1306_command(SSD1306_DISPLAYON);
-            displayOff = false;
-            Serial.println("Display turned back on.");
-        }
-
-        updateDisplay();
-        Serial.println("Exiting IDLE mode. Back to MENU.");
-    }
+    totalFocusTime = 0;
 }

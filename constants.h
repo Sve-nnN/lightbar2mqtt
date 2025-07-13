@@ -19,6 +19,9 @@ namespace constants
     // The version number of lightbar2mqtt.
     const String VERSION = "0.2";
 
+    const unsigned long IDLE_TIMEOUT = 3 * 60 * 1000;
+    const unsigned long DISPLAY_OFF_TIMEOUT = 30 * 60 * 1000;
+
     // The maximum number of light bars that can be connected to the controller.
     const uint8_t MAX_LIGHTBARS = 10;
 
