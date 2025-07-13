@@ -2,7 +2,7 @@
 #define FLOW_TIMER_H
 
 #include <Adafruit_SSD1306.h>
-#include <RotaryEncoder.h>
+#include "RotaryEncoder.h"
 #include "lightbar.h"
 #include "settings.h"
 
